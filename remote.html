@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Remote</title>
+  </head>
+  <body>
+    <h1>Remote</h1>
+    <button onclick="sendCommand('playPause')">Play/Pause</button>
+    <button onclick="sendCommand('skipForward')">+5 sec</button>
+
+    <input type="text" id="searchQuery" placeholder="Search for videos..." />
+    <button onclick="searchVideos()">Search</button>
+
+    <div id="videoList"></div>
+    <!-- Where the search results will appear -->
+
+    <ul id="messages"></ul>
+
+    <script>
+      const socket = new WebSocket("ws://localhost:8080");
+      const messages = document.getElementById("messages");
+      const videoList = document.getElementById("videoList");
+
+      socket.addEventListener("message", (event) => {
+        const li = document.createElement("li");
+        li.textContent = event.data;
+        messages.appendChild(li);
+      });
+
+      function sendCommand(command) {
+        socket.send(command);
+      }
+      // Search videos via YouTube Data API
+      function searchVideos() {
+        const query = document.getElementById("searchQuery").value;
+        const apiKey = "YOUR_YOUTUBE_API_KEY"; // Replace with your YouTube API key
+        const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&maxResults=6&type=video&key=${apiKey}`;
+
+        fetch(url)
+          .then((response) => response.json())
+          .then((data) => {
+            displaySearchResults(data.items);
+          })
+          .catch((error) => console.error("Error fetching data:", error));
+      }
+
+      // Display search results
+      function displaySearchResults(videos) {
+        videoList.innerHTML = ""; // Clear previous results
+        videos.forEach((video) => {
+          const videoElement = document.createElement("div");
+          videoElement.innerHTML = `
+            <h3>${video.snippet.title}</h3>
+            <img src="${video.snippet.thumbnails.default.url}" alt="${video.snippet.title}" />
+            <button onclick="selectVideo('${video.id.videoId}')">Select Video</button>
+          `;
+          videoList.appendChild(videoElement);
+        });
+      }
+
+      // When a video is selected, send the video ID to player.html
+      function selectVideo(videoId) {
+        socket.send(videoId); // Send the video ID to the player
+      }
+    </script>
+  </body>
+</html>
