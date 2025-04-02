@@ -32,10 +32,10 @@
       function sendCommand(command) {
         socket.send(command);
       }
-      // Search videos via YouTube Data API
+
       function searchVideos() {
         const query = document.getElementById("searchQuery").value;
-        const apiKey = "YOUR_YOUTUBE_API_KEY"; // Replace with your YouTube API key
+        const apiKey = "AIzaSyAwATAwlS0xBWhgQYXipgovfArCXkZYri4"; 
         const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&maxResults=6&type=video&key=${apiKey}`;
 
         fetch(url)
@@ -46,9 +46,9 @@
           .catch((error) => console.error("Error fetching data:", error));
       }
 
-      // Display search results
+
       function displaySearchResults(videos) {
-        videoList.innerHTML = ""; // Clear previous results
+        videoList.innerHTML = ""; 
         videos.forEach((video) => {
           const videoElement = document.createElement("div");
           videoElement.innerHTML = `
@@ -60,9 +60,8 @@
         });
       }
 
-      // When a video is selected, send the video ID to player.html
       function selectVideo(videoId) {
-        socket.send(videoId); // Send the video ID to the player
+        socket.send(videoId); 
       }
     </script>
   </body>
