@@ -1,68 +1,31 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Remote</title>
+    <title>YouTube Afstandsbediening</title>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <h1>Remote</h1>
-    <button onclick="sendCommand('playPause')">Play/Pause</button>
-    <button onclick="sendCommand('skipForward')">+5 sec</button>
+    <h1>YouTube Afstandsbediening</h1>
 
-    <input type="text" id="searchQuery" placeholder="Search for videos..." />
-    <button onclick="searchVideos()">Search</button>
+    <!-- Bedieningsknoppen -->
+    <div class="control-buttons">
+      <button onclick="sendCommand('playPause')">Afspelen/Pauzeren</button>
+      <button onclick="sendCommand('skipForward')">+5 sec</button>
+      <button onclick="sendCommand('skipBackward')">-5 sec</button>
+      <button onclick="sendCommand('toggleMute')">Geluid Aan/Uit</button>
+    </div>
 
+    <!-- Zoekbalk -->
+    <div class="search-container">
+      <input type="text" id="searchQuery" placeholder="Zoek naar video's..." />
+      <button onclick="searchVideos()">Zoeken</button>
+    </div>
+
+    <!-- Videolijst waar zoekresultaten verschijnen -->
     <div id="videoList"></div>
-    <!-- Where the search results will appear -->
 
-    <ul id="messages"></ul>
-
-    <script>
-      const socket = new WebSocket("ws://localhost:8080");
-      const messages = document.getElementById("messages");
-      const videoList = document.getElementById("videoList");
-
-      socket.addEventListener("message", (event) => {
-        const li = document.createElement("li");
-        li.textContent = event.data;
-        messages.appendChild(li);
-      });
-
-      function sendCommand(command) {
-        socket.send(command);
-      }
-
-      function searchVideos() {
-        const query = document.getElementById("searchQuery").value;
-        const apiKey = "AIzaSyAwATAwlS0xBWhgQYXipgovfArCXkZYri4"; 
-        const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&maxResults=6&type=video&key=${apiKey}`;
-
-        fetch(url)
-          .then((response) => response.json())
-          .then((data) => {
-            displaySearchResults(data.items);
-          })
-          .catch((error) => console.error("Error fetching data:", error));
-      }
-
-
-      function displaySearchResults(videos) {
-        videoList.innerHTML = ""; 
-        videos.forEach((video) => {
-          const videoElement = document.createElement("div");
-          videoElement.innerHTML = `
-            <h3>${video.snippet.title}</h3>
-            <img src="${video.snippet.thumbnails.default.url}" alt="${video.snippet.title}" />
-            <button onclick="selectVideo('${video.id.videoId}')">Select Video</button>
-          `;
-          videoList.appendChild(videoElement);
-        });
-      }
-
-      function selectVideo(videoId) {
-        socket.send(videoId); 
-      }
-    </script>
+    <script src="remote.js"></script>
   </body>
 </html>

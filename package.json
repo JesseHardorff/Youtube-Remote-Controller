@@ -17,8 +17,13 @@
     "url": "https://github.com/JesseHardorff/Youtube-Remote-Controller/issues"
   },
   "homepage": "https://github.com/JesseHardorff/Youtube-Remote-Controller#readme",
-  "description": "",
   "dependencies": {
     "ws": "^8.18.1"
-  }
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.3",
+    "tailwindcss": "^4.1.0"
+  },
+  "description": ""
 }
