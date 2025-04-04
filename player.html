@@ -3,35 +3,39 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Player</title>
-    <link rel="stylesheet" href="style.css" />
+    <title>YouTube Player</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
   </head>
-  <body>
+  <body class="bg-gray-100 min-h-screen">
     <!-- Overlay dat vraagt om interactie met de pagina -->
-    <div id="overlay" onclick="dismissOverlay()">
-      <div id="overlayText">Klik ergens op deze pagina om video's te kunnen afspelen via de remote</div>
+    <div
+      id="overlay"
+      onclick="dismissOverlay()"
+      class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 cursor-pointer"
+    >
+      <div id="overlayText" class="bg-white p-6 rounded-lg shadow-md text-center max-w-md">
+        <p class="text-lg">Klik ergens op deze pagina om video's te kunnen afspelen via de remote</p>
+      </div>
     </div>
 
-    <h1>YouTube Player</h1>
+    <div class="w-full h-screen flex flex-col">
+      <header class="bg-white bg-opacity-90 shadow-md">
+        <h1 class="text-3xl font-bold text-center text-blue-600 py-5 px-4">
+          <span class="text-red-600">YouTube</span> Player
+        </h1>
+      </header>
 
-    <!-- Berichtensectie voor communicatie -->
-    <input type="text" id="messageInput" placeholder="Type een bericht..." />
-    <button id="sendButton">Verstuur</button>
-    <ul id="messages"></ul>
+      <!-- YouTube player container -->
+      <div id="playerContainer" class="flex-1 w-full bg-black flex items-center justify-center">
+        <div id="player" class="w-full h-full max-w-6xl max-h-[80vh] mx-auto"></div>
+      </div>
 
-    <!-- YouTube player container -->
-    <div id="player"></div>
-
-    <!-- Bedieningsknoppen -->
-    <div class="controls">
-      <button onclick="togglePlayPause()">Afspelen/Pauzeren</button>
-      <button onclick="skipForward()">+5 sec</button>
-      <button onclick="skipBackward()">-5 sec</button>
-      <button onclick="toggleMute()">Geluid Aan/Uit</button>
-
+      <!-- Hidden button -->
+      <div class="hidden">
+        <button id="sendButton"></button>
+      </div>
     </div>
+
     <script src="player.js"></script>
   </body>
 </html>
