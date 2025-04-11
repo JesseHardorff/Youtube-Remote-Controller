@@ -1,22 +1,18 @@
-const socket = new WebSocket("ws://localhost:8080");
-const messages = document.getElementById("messages");
-const videoList = document.getElementById("videoList");
+// Socket.IO verbinding opzetten
+const socket = io();
 
-socket.addEventListener("message", (event) => {
-  const li = document.createElement("li");
-  li.textContent = event.data;
-  messages.appendChild(li);
-});
-
+// Functie om commando's naar de server te sturen
 function sendCommand(command) {
-  socket.send(command);
+  console.log(`Sending command: ${command}`);
+  socket.emit('command', command);
 }
 
+// Functie om video's te zoeken via de YouTube API
 function searchVideos() {
   const query = document.getElementById("searchQuery").value;
   const apiKey = "AIzaSyAwATAwlS0xBWhgQYXipgovfArCXkZYri4";
   const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&maxResults=6&type=video&key=${apiKey}`;
-
+  
   fetch(url)
     .then((response) => response.json())
     .then((data) => {
@@ -25,19 +21,22 @@ function searchVideos() {
     .catch((error) => console.error("Error fetching data:", error));
 }
 
-function displaySearchResults(videos) {
-  videoList.innerHTML = "";
-  videos.forEach((video) => {
-    const videoElement = document.createElement("div");
-    videoElement.innerHTML = `
-      <h3>${video.snippet.title}</h3>
-      <img src="${video.snippet.thumbnails.default.url}" alt="${video.snippet.title}" />
-      <button onclick="selectVideo('${video.id.videoId}')">Select Video</button>
-     `;
-    videoList.appendChild(videoElement);
-  });
+// Functie om een video te selecteren en naar de player te sturen
+function selectVideo(videoId) {
+  socket.emit('command', videoId);
 }
 
-function selectVideo(videoId) {
-  socket.send(videoId);
-}
+// Luisteren naar berichten van de player
+socket.on('command', (command) => {
+  console.log('Received command from player:', command);
+  // Hier kun je eventueel reageren op berichten van de player
+  
+  // Als je nog steeds berichten wilt toevoegen aan een lijst (zoals in je originele code)
+  if (document.getElementById("messages")) {
+    const li = document.createElement("li");
+    li.textContent = command;
+    document.getElementById("messages").appendChild(li);
+  }
+});
+
+// Opmerking: De displaySearchResults functie wordt overschreven door de script tag in je HTML

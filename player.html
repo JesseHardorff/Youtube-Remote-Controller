@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>YouTube Player</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
   </head>
-  <body class="bg-gray-100 min-h-screen">
+  <body class="bg-gray-100">
     <!-- Overlay dat vraagt om interactie met de pagina -->
     <div
       id="overlay"
@@ -17,25 +18,21 @@
         <p class="text-lg">Klik ergens op deze pagina om video's te kunnen afspelen via de remote</p>
       </div>
     </div>
-
     <div class="w-full h-screen flex flex-col">
-      <header class="bg-white bg-opacity-90 shadow-md">
+      <header class="bg-gray-300">
         <h1 class="text-3xl font-bold text-center text-blue-600 py-5 px-4">
           <span class="text-red-600">YouTube</span> Player
         </h1>
       </header>
-
       <!-- YouTube player container -->
-      <div id="playerContainer" class="flex-1 w-full bg-black flex items-center justify-center">
+      <div id="playerContainer" class="bg-gray-300 flex-1 w-full bg-black flex items-center justify-center">
         <div id="player" class="w-full h-full max-w-6xl max-h-[80vh] mx-auto"></div>
       </div>
-
       <!-- Hidden button -->
       <div class="hidden">
         <button id="sendButton"></button>
       </div>
     </div>
-
     <script src="player.js"></script>
   </body>
 </html>

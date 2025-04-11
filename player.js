@@ -1,26 +1,17 @@
-
 // Functie om het overlay te verwijderen na interactie
 function dismissOverlay() {
   document.getElementById("overlay").style.display = "none";
   // Stuur een bericht naar de remote dat de player nu interactief is
-  socket.send("player_interactive");
+  socket.emit('command', 'player_interactive');
 }
 
-// WebSocket verbinding opzetten
-const socket = new WebSocket("ws://localhost:8080");
-const input = document.getElementById("messageInput");
-const button = document.getElementById("sendButton");
-const messages = document.getElementById("messages");
+// Socket.IO verbinding opzetten
+const socket = io();
 
 // Luisteren naar berichten van de remote
-socket.addEventListener("message", async (event) => {
-  // Converteer Blob naar tekst
-  const data = await event.data.text(); 
-  console.log("Ontvangen WebSocket bericht:", data);
-
-  // Verwijder eventuele prefix
-  let command = data.replace("Server: ", ""); 
-
+socket.on('command', (command) => {
+  console.log("Ontvangen Socket.IO bericht:", command);
+  
   // Verwerk de verschillende commando's
   if (command === "playPause") {
     console.log("Play/Pause functie wordt aangeroepen");
@@ -41,13 +32,6 @@ socket.addEventListener("message", async (event) => {
   } else {
     console.warn("Onbekend commando ontvangen:", command);
   }
-});
-
-// Verstuur berichten via de WebSocket
-button.addEventListener("click", () => {
-  const message = input.value;
-  socket.send(message);
-  input.value = "";
 });
 
 // Laad de YouTube IFrame API
@@ -101,9 +85,6 @@ function toggleMute() {
     player.mute();
   }
 }
-
-// Functie om volledig scherm in/uit te schakelen
-
 
 // Functie om een nieuwe video te laden
 function loadVideo(videoId) {

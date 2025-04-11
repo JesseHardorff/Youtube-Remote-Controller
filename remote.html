@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>YouTube Afstandsbediening</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="/socket.io/socket.io.js"></script>
   </head>
   <body class="bg-gray-200 p-3 font-sans">
     <div class="max-w-md mx-auto">
@@ -12,7 +13,6 @@
       <h1 class="text-2xl font-bold text-center text-red-500 mb-4 pb-2 border-b border-red-500">
         YouTube Afstandsbediening
       </h1>
-
       <!-- Bedieningsknoppen -->
       <div class="grid grid-cols-2 gap-2 mb-6">
         <button onclick="sendCommand('playPause')" class="bg-red-500 text-white py-3 px-3 rounded text-lg shadow-sm">
@@ -28,7 +28,6 @@
           Geluid Aan/Uit
         </button>
       </div>
-
       <!-- Zoekbalk -->
       <div class="flex flex-col gap-2 mb-5">
         <input
@@ -39,27 +38,23 @@
         />
         <button onclick="searchVideos()" class="bg-blue-500 text-white py-2 px-4 rounded">Zoeken</button>
       </div>
-
       <!-- Videolijst waar zoekresultaten verschijnen -->
       <div id="videoList" class="grid grid-cols-1 gap-3"></div>
     </div>
-
     <script src="remote.js"></script>
-
     <!-- Script om videoItems te stylen met Tailwind -->
     <script>
       // Update de displaySearchResults functie om eenvoudigere Tailwind classes te gebruiken
       function displaySearchResults(videos) {
         const videoList = document.getElementById("videoList");
         videoList.innerHTML = "";
-
         videos.forEach((video) => {
           const videoElement = document.createElement("div");
           videoElement.className = "bg-white rounded border border-gray-300";
           videoElement.innerHTML = `
             <h3 class="p-2 text-sm font-medium overflow-hidden">${video.snippet.title}</h3>
             <img src="${video.snippet.thumbnails.medium.url}" alt="${video.snippet.title}" class="w-full" />
-            <button onclick="selectVideo('${video.id.videoId}')" 
+            <button onclick="selectVideo('${video.id.videoId}')"
                     class="w-full py-2 bg-blue-500 text-white">
               Selecteer Video
             </button>
