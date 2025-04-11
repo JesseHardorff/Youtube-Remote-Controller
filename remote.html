@@ -6,6 +6,16 @@
     <title>YouTube Afstandsbediening</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <style>
+      /* Voorkom zoom op iOS */
+      * {
+        touch-action: manipulation;
+      }
+      button {
+        -webkit-tap-highlight-color: rgba(0,0,0,0);
+        -webkit-tap-highlight-color: transparent;
+      }
+    </style>
   </head>
   <body class="bg-gray-200 p-3 font-sans">
     <div class="max-w-md mx-auto">
