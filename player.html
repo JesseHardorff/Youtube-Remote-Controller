@@ -6,6 +6,31 @@
     <title>YouTube Player</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
+    <style>
+      /* Styling voor animaties */
+      @keyframes fadeInOut {
+        0% { opacity: 0; }
+        15% { opacity: 1; }
+        85% { opacity: 1; }
+        100% { opacity: 0; }
+      }
+      
+      .action-indicator {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 15px 30px;
+        border-radius: 10px;
+        font-size: 24px;
+        z-index: 100;
+        /* Eén enkele animatie die 1 seconde duurt */
+        animation: fadeInOut 1s forwards;
+        pointer-events: none;
+      }
+    </style>
   </head>
   <body class="bg-gray-100">
     <!-- Overlay dat vraagt om interactie met de pagina -->
@@ -25,8 +50,10 @@
         </h1>
       </header>
       <!-- YouTube player container -->
-      <div id="playerContainer" class="bg-gray-300 flex-1 w-full bg-black flex items-center justify-center">
+      <div id="playerContainer" class="bg-gray-300 flex-1 w-full bg-black flex items-center justify-center relative">
         <div id="player" class="w-full h-full max-w-6xl max-h-[80vh] mx-auto"></div>
+        <!-- Container voor actie-indicatoren -->
+        <div id="actionIndicators"></div>
       </div>
       <!-- Hidden button -->
       <div class="hidden">
