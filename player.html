@@ -1,21 +1,28 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,maximum-scale=1.0, user-scalable=no, initial-scale=1.0" />
-    <title>YouTube Player</title>
+    <title>YouTube Speler</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/socket.io/socket.io.js"></script>
     <style>
-      /* Styling voor animaties */
+      /* animatie voor de meldingen die in/uit faden */
       @keyframes fadeInOut {
-        0% { opacity: 0; }
-        15% { opacity: 1; }
-        85% { opacity: 1; }
-        100% { opacity: 0; }
+        0% {
+          opacity: 0;
+        }
+        15% {
+          opacity: 1;
+        }
+        85% {
+          opacity: 1;
+        }
+        100% {
+          opacity: 0;
+        }
       }
-      
-      .action-indicator {
+      .actie-melding {
         position: absolute;
         top: 50%;
         left: 50%;
@@ -26,40 +33,52 @@
         border-radius: 10px;
         font-size: 24px;
         z-index: 100;
-        /* Eén enkele animatie die 1 seconde duurt */
+        /* Deze animatie duurt 1 seconde en verdwijnt daarna */
         animation: fadeInOut 1s forwards;
         pointer-events: none;
       }
     </style>
   </head>
   <body class="bg-gray-100">
-    <!-- Overlay dat vraagt om interactie met de pagina -->
+    <!-- Dit overlay vraagt de gebruiker om interactie, dat is nodig voor autoplay -->
     <div
       id="overlay"
-      onclick="dismissOverlay()"
-      class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 cursor-pointer"
+      onclick="verwijderOverlay()"
+      class="fixed top-0 left-0 right-0 bottom-0 bg-black bg-opacity-70 flex items-center justify-center z-50 cursor-pointer"
     >
-      <div id="overlayText" class="bg-white p-6 rounded-lg shadow-md text-center max-w-md">
+      <div
+        id="overlayText"
+        class="bg-white p-6 rounded-lg shadow-md text-center"
+        style="max-width: 28rem"
+      >
         <p class="text-lg">Klik ergens op deze pagina om video's te kunnen afspelen via de remote</p>
       </div>
     </div>
+    
     <div class="w-full h-screen flex flex-col">
       <header class="bg-gray-300">
-        <h1 class="text-3xl font-bold text-center text-blue-600 py-5 px-4">
-          <span class="text-red-600">YouTube</span> Player
+        <h1 class="text-3xl font-bold text-center text-blue-600 p-5">
+          <span class="text-red-600">YouTube</span> Speler
         </h1>
       </header>
-      <!-- YouTube player container -->
-      <div id="playerContainer" class="bg-gray-300 flex-1 w-full bg-black flex items-center justify-center relative">
-        <div id="player" class="w-full h-full max-w-6xl max-h-[80vh] mx-auto"></div>
-        <!-- Container voor actie-indicatoren -->
-        <div id="actionIndicators"></div>
+      
+      <!-- YouTube speler -->
+      <div
+        id="spelerContainer"
+        class="bg-gray-300 flex-1 w-full flex items-center justify-center relative"
+      >
+        <div 
+          id="speler" 
+          class="w-full h-full"
+          style="max-width: 72rem; max-height: 80vh; margin: 0 auto"
+        ></div>
+        
+        <!-- Container voor de actie-meldingen -->
+        <div id="actieMeldingen"></div>
       </div>
-      <!-- Hidden button -->
-      <div class="hidden">
-        <button id="sendButton"></button>
-      </div>
-    </div>
+      
+ 
+    
     <script src="player.js"></script>
   </body>
 </html>

@@ -1,78 +1,72 @@
-// Socket.IO verbinding opzetten
+// Verbinding met socket io
+// Dit zorgt ervoor dat de afstandsbediening kan communiceren met de player
 const socket = io();
 
-// Bijhouden van de huidige status
-let playerState = {
-  isPlaying: false,
-  isMuted: false,
+// Dit object houdt bij wat de huidige status is van de speler
+
+let spelerStatus = {
+  isAanHetAfspelen: false,
+  isGedempt: false,
   volume: 100,
 };
 
-// Functie om commando's naar de server te sturen
-function sendCommand(command) {
-  console.log(`Sending command: ${command}`);
-  socket.emit("command", command);
+// Deze functie stuurt commando's naar de player
+// Bijvoorbeeld play, pause etc
+function stuurCommando(commando) {
+  socket.emit("command", commando);
 }
 
-// Functie om het volume aan te passen
-function setVolume(value) {
-  playerState.volume = value;
-  console.log(`Setting volume to: ${value}`);
-  socket.emit("command", `volume:${value}`);
+// Deze functie past het volume aan en stuurt het naar de player
+function zetVolume(waarde) {
+  spelerStatus.volume = waarde;
+  socket.emit("command", `volume:${waarde}`);
 }
 
-// Functie om video's te zoeken via de YouTube API
-function searchVideos() {
-  const query = document.getElementById("searchQuery").value;
-  const apiKey = "AIzaSyAwATAwlS0xBWhgQYXipgovfArCXkZYri4";
-  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${query}&maxResults=6&type=video&key=${apiKey}`;
+// Deze functie zoekt video's via de YouTube API
+function zoekVideos() {
+  const zoekterm = document.getElementById("zoekTekst").value;
+  const apiSleutel = "AIzaSyAwATAwlS0xBWhgQYXipgovfArCXkZYri4";
+  const url = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${zoekterm}&maxResults=6&type=video&key=${apiSleutel}`;
 
   fetch(url)
     .then((response) => response.json())
     .then((data) => {
-      displaySearchResults(data.items);
+      toonZoekResultaten(data.items);
     })
-    .catch((error) => console.error("Error fetching data:", error));
+    .catch((error) => console.error("Fout bij ophalen data:", error));
 }
 
-// Functie om een video te selecteren en naar de player te sturen
-function selectVideo(videoId) {
+// Deze functie selecteert een video en stuurt de ID naar de player
+function selecteerVideo(videoId) {
   socket.emit("command", videoId);
 }
 
-// Luisteren naar berichten van de player
-socket.on("command", (command) => {
-  console.log("Received command from player:", command);
-
-  // Update de UI op basis van de status van de player
-  if (command === "player_state:playing") {
-    playerState.isPlaying = true;
-    document.getElementById("playPauseBtn").textContent = "Pauzeren";
-  } else if (command === "player_state:paused") {
-    playerState.isPlaying = false;
-    document.getElementById("playPauseBtn").textContent = "Afspelen";
-  } else if (command === "player_state:muted") {
-    playerState.isMuted = true;
-    document.getElementById("muteBtn").textContent = "Geluid Aan";
-  } else if (command === "player_state:unmuted") {
-    playerState.isMuted = false;
-    document.getElementById("muteBtn").textContent = "Geluid Uit";
-  } else if (command.startsWith("player_state:volume:")) {
-    const volume = command.split(":")[2];
-    playerState.volume = volume;
+// Hier luister het naar berichten van de player
+// Zo blijft de remote gesynct met wat er speelt
+socket.on("command", (commando) => {
+  // Update de knoppen op basis van de status van de player
+  if (commando === "player_state:playing") {
+    spelerStatus.isAanHetAfspelen = true;
+    document.getElementById("afspeelPauzeKnop").textContent = "Pauzeren";
+  } else if (commando === "player_state:paused") {
+    spelerStatus.isAanHetAfspelen = false;
+    document.getElementById("afspeelPauzeKnop").textContent = "Afspelen";
+  } else if (commando === "player_state:muted") {
+    spelerStatus.isGedempt = true;
+    document.getElementById("geluidKnop").textContent = "Geluid Aan";
+  } else if (commando === "player_state:unmuted") {
+    spelerStatus.isGedempt = false;
+    document.getElementById("geluidKnop").textContent = "Geluid Uit";
+  } else if (commando.startsWith("player_state:volume:")) {
+    const volume = commando.split(":")[2];
+    spelerStatus.volume = volume;
     document.getElementById("volumeSlider").value = volume;
-  }
-
-  // Als je nog steeds berichten wilt toevoegen aan een lijst (zoals in je originele code)
-  if (document.getElementById("messages")) {
-    const li = document.createElement("li");
-    li.textContent = command;
-    document.getElementById("messages").appendChild(li);
   }
 });
 
-// Initialiseer de UI bij het laden van de pagina
+// Als de pagina geladen is, vraag ik de huidige status op van de player
+// Zo zijn de knoppen meteen in de goeie state
 window.addEventListener("load", () => {
-  // Vraag de huidige status op van de player
+  // Vraag de huidige status op van de speler
   socket.emit("command", "get_player_state");
 });

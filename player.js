@@ -1,241 +1,242 @@
-// Functie om het overlay te verwijderen na interactie
-function dismissOverlay() {
+// Deze functie verwijdert het startscherm nadat de gebruiker erop klikt
+// Dat is nodig omdat browsers de autoplay blokkeren zonder interactie
+function verwijderOverlay() {
   document.getElementById("overlay").style.display = "none";
-  // Stuur een bericht naar de remote dat de player nu interactief is
+  // Hier stuur ik een bericht naar de afstandsbediening dat de speler klaar is
   socket.emit("command", "player_interactive");
 }
 
-// Socket.IO verbinding opzetten
+// Verbinding met socket io
+// Dit zorgt ervoor dat de afstandsbediening kan communiceren met de player
 const socket = io();
 
-// Bijhouden van de huidige status
-let playerState = {
-  isPlaying: false,
-  isMuted: false,
+// Dit object houdt bij wat de huidige status is van de speler
+let spelerStatus = {
+  isAanHetAfspelen: false,
+  isGedempt: false,
   volume: 100,
 };
 
-// Bijhouden van de laatste actie om dubbele notificaties te voorkomen
-let lastAction = {
+// Dit object voorkomt dat dezelfde melding meerdere keren verschijnt
+// Dit moest ik toevoegen omdat hij dat deed dus dat is nu gefixt
+let laatsteActie = {
   type: null,
-  timestamp: 0,
+  tijdstip: 0,
 };
+// Deze functie toont een melding in het midden van de video
 
-// Functie om een actie-indicator te tonen
-function showActionIndicator(action) {
-  // Voorkom dubbele notificaties binnen korte tijd
-  const now = Date.now();
-  if (lastAction.type === action && now - lastAction.timestamp < 1000) {
-    return; // Negeer herhaalde acties binnen 1 seconde
+function toonActieMelding(actie) {
+  // Hier check ik of dezelfde actie niet net is uitgevoerd
+  const nu = Date.now();
+  if (laatsteActie.type === actie && nu - laatsteActie.tijdstip < 500) {
+    return; // Als dezelfde actie binnen .5 seconde opnieuw komt, negeren we 'm
   }
 
-  // Update de laatste actie
-  lastAction.type = action;
-  lastAction.timestamp = now;
+  // Update wanneer we deze actie voor het laatst hebben gezien
+  laatsteActie.type = actie;
+  laatsteActie.tijdstip = nu;
 
-  // Verwijder alle bestaande indicators
-  const container = document.getElementById("actionIndicators");
+  // Verwijder eventuele oude meldingen
+  const container = document.getElementById("actieMeldingen");
   container.innerHTML = "";
 
-  // Maak een nieuwe indicator
-  const indicator = document.createElement("div");
-  indicator.className = "action-indicator";
+  // Maak een nieuwe melding aan
+  const melding = document.createElement("div");
+  melding.className = "actie-melding";
 
-  // Bepaal de tekst en eventueel icoon op basis van de actie
-  let indicatorText = "";
-
-  switch (action) {
+  // Hier bepaal ik welke tekst er in de melding moet komen
+  let meldingTekst = "";
+  switch (actie) {
     case "playPause":
-      indicatorText = playerState.isPlaying ? "▶️ Afspelen" : "⏸️ Pauze";
+      meldingTekst = spelerStatus.isAanHetAfspelen ? "⏸️ Pauze" : "▶️ Afspelen";
       break;
     case "skipForward":
-      indicatorText = "⏩ +5 seconden";
+      meldingTekst = "⏩ +5 seconden";
       break;
     case "skipBackward":
-      indicatorText = "⏪ -5 seconden";
+      meldingTekst = "⏪ -5 seconden";
       break;
     case "toggleMute":
-      indicatorText = playerState.isMuted ? "🔇 Geluid uit" : "🔊 Geluid aan";
+      meldingTekst = spelerStatus.isGedempt ? "🔊 Geluid aan" : "🔇 Geluid uit";
       break;
     case "volume":
-      indicatorText = `🔊 Volume: ${playerState.volume}%`;
+      meldingTekst = `🔊 Volume: ${spelerStatus.volume}%`;
       break;
     default:
-      indicatorText = action;
+      meldingTekst = actie;
   }
 
-  indicator.textContent = indicatorText;
-  container.appendChild(indicator);
+  melding.textContent = meldingTekst;
+  container.appendChild(melding);
 }
 
-// Functie om de status van de player naar de remote te sturen
-function updateRemoteState() {
-  // Stuur de huidige afspeelstatus
-  socket.emit("command", `player_state:${playerState.isPlaying ? "playing" : "paused"}`);
+// Deze functie stuurt de huidige status naar de remote
+// Zo weet de remote of we aan het afspelen zijn, wat het volume is, etc.
+function updateRemoteStatus() {
+  // Stuur of het aan het afspelen is
+  socket.emit("command", `player_state:${spelerStatus.isAanHetAfspelen ? "playing" : "paused"}`);
 
-  // Stuur de huidige mute status
-  socket.emit("command", `player_state:${playerState.isMuted ? "muted" : "unmuted"}`);
+  // Stuur of het geluid aan staat
+  socket.emit("command", `player_state:${spelerStatus.isGedempt ? "muted" : "unmuted"}`);
 
-  // Stuur het huidige volume
-  socket.emit("command", `player_state:volume:${playerState.volume}`);
+  // Stuur de huidige volume
+  socket.emit("command", `player_state:volume:${spelerStatus.volume}`);
 }
 
-// Luisteren naar berichten van de remote
-socket.on("command", (command) => {
-  console.log("Ontvangen Socket.IO bericht:", command);
-
-  // Verwerk de verschillende commando's
-  if (command === "playPause") {
-    console.log("Play/Pause functie wordt aangeroepen");
-    togglePlayPause();
-    showActionIndicator("playPause");
-  } else if (command === "skipForward") {
-    console.log("+5 sec functie wordt aangeroepen");
-    skipForward();
-    showActionIndicator("skipForward");
-  } else if (command === "skipBackward") {
-    console.log("-5 sec functie wordt aangeroepen");
-    skipBackward();
-    showActionIndicator("skipBackward");
-  } else if (command === "toggleMute") {
-    console.log("Mute/Unmute functie wordt aangeroepen");
-    toggleMute();
-    showActionIndicator("toggleMute");
-  } else if (command === "get_player_state") {
-    console.log("Status wordt opgevraagd");
-    updateRemoteState();
-    // Geen indicator tonen voor status updates
-  } else if (command.startsWith("volume:")) {
-    console.log("Volume wordt aangepast");
-    const volume = parseInt(command.split(":")[1]);
-    setVolume(volume);
-    // Toon alleen de volume indicator als er een significante verandering is
-    if (Math.abs(volume - playerState.volume) > 5) {
-      showActionIndicator("volume");
+// Hier luistert het naar berichten van de remote
+socket.on("command", (commando) => {
+  // Hier word alle verschillende commando's uitgevoert die kunnen binnenkomen
+  if (commando === "playPause") {
+    // Bepaal de huidige status voordat het deze verander
+    const wasAanHetAfspelen = spelerStatus.isAanHetAfspelen;
+    schakelAfspelenPauze();
+    // Toon de juiste melding op basis van de vorige status
+    toonActieMelding(wasAanHetAfspelen ? "Pauze" : "Afspelen");
+  } else if (commando === "skipForward") {
+    spoelVooruit();
+    toonActieMelding("skipForward");
+  } else if (commando === "skipBackward") {
+    spoelTerug();
+    toonActieMelding("skipBackward");
+  } else if (commando === "toggleMute") {
+    // Bepaal de huidige mute status voordat we deze veranderen
+    const wasGedempt = spelerStatus.isGedempt;
+    schakelGeluid();
+    // Toon de juiste melding op basis van de vorige status
+    toonActieMelding(wasGedempt ? "Geluid aan" : "Geluid uit");
+  } else if (commando === "get_player_state") {
+    updateRemoteStatus();
+    // Hier toon ik geen melding omdat dat irritant zou zijn
+  } else if (commando.startsWith("volume:")) {
+    const volume = parseInt(commando.split(":")[1]);
+    zetVolume(volume);
+    // Alleen een melding tonen als het volume echt verandert
+    if (Math.abs(volume - spelerStatus.volume) > 5) {
+      toonActieMelding("volume");
     }
-  } else if (command.length === 11) {
-    // YouTube video ID's zijn 11 tekens lang
-    console.log("Nieuwe video wordt geladen:", command);
-    loadVideo(command);
-    showActionIndicator("Nieuwe video wordt geladen");
+  } else if (commando.length === 11) {
+    // YouTube video ID's zijn altijd 11 tekens lang
+
+    laadVideo(commando);
+    toonActieMelding("Nieuwe video wordt geladen");
   } else {
-    console.warn("Onbekend commando ontvangen:", command);
   }
 });
 
-// Laad de YouTube IFrame API
+// Hier laad ik de YouTube API in
+// Dit was best ingewikkeld om uit te zoeken hoe dit werkt
 var tag = document.createElement("script");
 tag.src = "https://www.youtube.com/iframe_api";
 var firstScriptTag = document.getElementsByTagName("script")[0];
 firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
 
-// Initialiseer de YouTube player
-let player;
+// Hier maak ik de YouTube speler aan
+let speler;
 function onYouTubeIframeAPIReady() {
-  player = new YT.Player("player", {
+  speler = new YT.Player("speler", {
     height: "390",
     width: "640",
-    videoId: "M7lc1UVf-VE", // Standaard video
+    videoId: "9bZkp7q19f0", // Dit is een standaard video om mee te beginnen
     playerVars: {
       playsinline: 1,
       autoplay: 1,
-      mute: 0, // Video start niet gedempt
+      mute: 0, // Video start met geluid aan
     },
     events: {
-      onReady: onPlayerReady,
-      onStateChange: onPlayerStateChange,
+      onReady: spelerKlaar,
+      onStateChange: spelerStatusVeranderd,
     },
   });
 }
 
-// Functie om video af te spelen of te pauzeren
-function togglePlayPause() {
-  var state = player.getPlayerState();
-  if (state === YT.PlayerState.PLAYING) {
-    player.pauseVideo();
-    playerState.isPlaying = false;
+// Deze functie schakelt tussen afspelen en pauzeren
+function schakelAfspelenPauze() {
+  var status = speler.getPlayerState();
+  if (status === YT.PlayerState.PLAYING) {
+    speler.pauseVideo();
+    spelerStatus.isAanHetAfspelen = false;
   } else {
-    player.playVideo();
-    playerState.isPlaying = true;
+    speler.playVideo();
+    spelerStatus.isAanHetAfspelen = true;
   }
-  updateRemoteState();
+  updateRemoteStatus();
 }
 
-// Functie om 5 seconden vooruit te spoelen
-function skipForward() {
-  var currentTime = player.getCurrentTime();
-  player.seekTo(currentTime + 5, true);
+// Deze functie spoelt 5 seconden vooruit
+function spoelVooruit() {
+  var huidigeTijd = speler.getCurrentTime();
+  speler.seekTo(huidigeTijd + 5, true);
 }
 
-// Functie om 5 seconden terug te spoelen
-function skipBackward() {
-  var currentTime = player.getCurrentTime();
-  player.seekTo(Math.max(0, currentTime - 5), true);
+// Deze functie spoelt 5 seconden terug
+function spoelTerug() {
+  var huidigeTijd = speler.getCurrentTime();
+  speler.seekTo(Math.max(0, huidigeTijd - 5), true);
 }
 
-// Functie om het geluid aan/uit te zetten
-function toggleMute() {
-  if (player.isMuted()) {
-    player.unMute();
-    playerState.isMuted = false;
+// Deze functie zet het geluid aan of uit
+function schakelGeluid() {
+  if (speler.isMuted()) {
+    speler.unMute();
+    spelerStatus.isGedempt = false;
   } else {
-    player.mute();
-    playerState.isMuted = true;
+    speler.mute();
+    spelerStatus.isGedempt = true;
   }
-  updateRemoteState();
+  updateRemoteStatus();
 }
 
-// Functie om het volume aan te passen
-function setVolume(volume) {
-  player.setVolume(volume);
-  playerState.volume = volume;
-  updateRemoteState();
+// Deze functie past het volume aan
+function zetVolume(volume) {
+  speler.setVolume(volume);
+  spelerStatus.volume = volume;
+  updateRemoteStatus();
 }
 
-// Functie om een nieuwe video te laden
-function loadVideo(videoId) {
-  player.loadVideoById(videoId);
-  playerState.isPlaying = true;
-  updateRemoteState();
+// Deze functie laadt een nieuwe video
+function laadVideo(videoId) {
+  speler.loadVideoById(videoId);
+  spelerStatus.isAanHetAfspelen = true;
+  updateRemoteStatus();
 }
 
-// Functie die wordt aangeroepen wanneer de player klaar is
-function onPlayerReady(event) {
+// Deze functie wordt aangeroepen als de speler klaar is om te starten
+function spelerKlaar(event) {
   event.target.playVideo();
-  playerState.isPlaying = true;
-  playerState.volume = player.getVolume();
-  playerState.isMuted = player.isMuted();
-  updateRemoteState();
+  spelerStatus.isAanHetAfspelen = true;
+  spelerStatus.volume = speler.getVolume();
+  spelerStatus.isGedempt = speler.isMuted();
+  updateRemoteStatus();
 }
 
-// Functie die wordt aangeroepen wanneer de player status verandert
-function onPlayerStateChange(event) {
+// Deze functie wordt aangeroepen als de status van de speler verandert
+// Bijvoorbeeld als de video klaar is of gepauzeerd wordt
+function spelerStatusVeranderd(event) {
   if (event.data === YT.PlayerState.PLAYING) {
-    playerState.isPlaying = true;
+    spelerStatus.isAanHetAfspelen = true;
   } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
-    playerState.isPlaying = false;
+    spelerStatus.isAanHetAfspelen = false;
   }
 
   // Update de mute status en volume
-  playerState.isMuted = player.isMuted();
-  playerState.volume = player.getVolume();
+  spelerStatus.isGedempt = speler.isMuted();
+  spelerStatus.volume = speler.getVolume();
 
   // Stuur de bijgewerkte status naar de remote
-  updateRemoteState();
+  updateRemoteStatus();
 }
 
-// Controleer periodiek of de mute status of volume is veranderd
-// (omdat YouTube API niet altijd events triggert voor deze wijzigingen)
+// Hier check ik elke seconde of de mute status of volume is veranderd
+// Dit moest ik doen omdat de YouTube API niet altijd events stuurt
 setInterval(() => {
-  if (player && player.getPlayerState) {
-    const currentMuted = player.isMuted();
-    const currentVolume = player.getVolume();
+  if (speler && speler.getPlayerState) {
+    const huidigeGedempt = speler.isMuted();
+    const huidigeVolume = speler.getVolume();
 
-    if (currentMuted !== playerState.isMuted || currentVolume !== playerState.volume) {
-      playerState.isMuted = currentMuted;
-      playerState.volume = currentVolume;
-      updateRemoteState();
-      // Geen indicator tonen voor automatische updates
+    if (huidigeGedempt !== spelerStatus.isGedempt || huidigeVolume !== spelerStatus.volume) {
+      spelerStatus.isGedempt = huidigeGedempt;
+      spelerStatus.volume = huidigeVolume;
+      updateRemoteStatus();
     }
   }
 }, 1000);
